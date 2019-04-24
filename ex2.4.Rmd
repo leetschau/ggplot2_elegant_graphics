@@ -1,0 +1,102 @@
+---
+title: "Exercises for 2.4"
+output: html_notebook
+---
+
+```{r}
+library(ggplot2)
+ggplot(mpg, aes(displ, cty, color = class)) + geom_point()
+ggplot(mpg, aes(displ, cty)) + geom_point(aes(color = "blue"))
+ggplot(mpg, aes(displ, cty)) + geom_point(color = "blue")
+```
+
+第2句中的 `color = "blue"` 修饰的是 `aes` 函数，
+第3句中的 `color = "blue"` 修饰的是 `geom_point` 函数，
+后者比较好理解，指 scatter plot 图层的颜色使用蓝色，
+前者字面的意思是按照一个叫 "blue" 的特征对散点图做颜色分类，
+但并不存在 "blue" 这个特征，这时 `aes` 的行为似乎只是是给 "blue" 分配一个固定的颜色（粉色）。
+
+> Instead of trying to make one very complex plot that shows everything at once,
+> see if you can create a series of simple plots that tells a story,
+> leading the reader from ignorance to knowledge.
+
+# Q1
+
+Experiment with the color, shape and size aesthetics.
+What happens when you map them to continuous values?
+What about categorical values?
+
+```{r}
+ggplot(mpg, aes(displ, cty, color = hwy)) + geom_point()
+# ggplot(mpg, aes(displ, cty, shape = hwy)) + geom_point()
+```
+
+将数值型特征映射到 color（上图）效果尚可，渐变色。
+将数值型特征映射到 shape （第2行代码）会导致错误，也是下面 Q2 的答案。
+
+```{r}
+ggplot(mpg, aes(displ, cty, size = class)) + geom_point()  # 将类别型特征映射到 size 效果不好，R 输出警告。
+ggplot(mpg, aes(displ, cty, shape = class)) + geom_point()  # R 默认的 shape 只有6种，超过会导致区分度变差
+ggplot(mpg, aes(displ, cty, size = hwy)) + geom_point()  # size 上应用数值型特征的效果不错
+ggplot(mpg, aes(cty, hwy, size = cty)) + geom_point()    # x, y 值与 size 图例可以重复
+```
+
+What happens when you use more one aesthetic in a plot?
+
+```{r}
+ggplot(mpg, aes(displ, cty, size = hwy)) + geom_point(aes(color = class))
+ggplot(mpg, aes(displ, cty, color = manufacturer)) + geom_point()
+ggplot(mpg, aes(displ, cty, color = manufacturer)) + geom_point(aes(color = class))
+```
+
+第1张图说明使用不同的 aesthetic 维度 (`size = hwy` vs `color = class`) 不会互相影响。
+
+第3张图的图例名称虽然是 "manufacturer"，内容却是 "class" 的，可见添加多个冲突的 `aes` 会导致错误。
+
+可以对同一个特征使用多个 aesthetic map:
+```{r}
+ggplot(mpg, aes(displ, cty, color = drv, shape = drv)) + geom_point()
+```
+
+# Q2
+
+What happens if you map a continuous variable to shape? Why?
+
+See answers above.
+
+What happens if you map *trans* to shape? Why?
+
+```{r}
+ggplot(mpg, aes(displ, cty, shape = trans)) + geom_point()
+```
+
+*shape* 只能处理最多6种类型，超出的类型不显示新的 *shape* 图例。
+
+# Q3
+
+How is drive train related to fuel economy?
+
+```{r}
+ggplot(mpg, aes(drv, cty.eco)) + geom_bar(stat = "identity")
+ggplot(mpg, aes(drv, cty)) + geom_bar(stat = "identity")
+```
+
+`cty` 和 `cty.eco` 给出了矛盾的结论，貌似 `cty.eco` 算错了。
+
+How is drive train related to engine size and class?
+
+```{r}
+ggplot(mpg, aes(drv, displ)) + geom_bar(stat = "identity")
+#ggplot(mpg, aes(drv, class)) + geom_point()
+```
+
+```{r}
+ggplot(mpg, aes(drv, ..count..)) +
+  geom_bar(aes(fill = class), position = "dodge")
+```
+
+`..count..` 是什么意思？
+
+`fill` 和 `color` 的区别是什么？
+
+`position` 的作用是什么？
